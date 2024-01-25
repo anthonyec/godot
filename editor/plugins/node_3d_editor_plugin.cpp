@@ -109,6 +109,8 @@ constexpr real_t ZOOM_FREELOOK_MIN = 0.01;
 constexpr real_t ZOOM_FREELOOK_MULTIPLIER = 1.08;
 constexpr real_t ZOOM_FREELOOK_INDICATOR_DELAY_S = 1.5;
 
+constexpr int PIP_CAMERA_PREVIEW_Z_INDEX = 1;
+
 #ifdef REAL_T_IS_DOUBLE
 constexpr double ZOOM_FREELOOK_MAX = 1'000'000'000'000;
 #else
@@ -670,6 +672,24 @@ void Node3DEditorViewport::_update_shrink() {
 	bool shrink = view_menu->get_popup()->is_item_checked(view_menu->get_popup()->get_item_index(VIEW_HALF_RESOLUTION));
 	subviewport_container->set_stretch_shrink(shrink ? 2 : 1);
 	subviewport_container->set_texture_filter(shrink ? TEXTURE_FILTER_NEAREST : TEXTURE_FILTER_PARENT_NODE);
+}
+
+void Node3DEditorViewport::_update_info_label() {
+	bool show_info = view_menu->get_popup()->is_item_checked(view_menu->get_popup()->get_item_index(VIEW_INFORMATION));
+
+	if (!show_info) {
+		return;
+	}
+
+	real_t info_label_margin = 10 * EDSCALE;
+
+	if (pip_camera_preview->get_pinned_edge() == PIPCameraPreview::PINNED_EDGE_RIGHT) {
+		real_t preview_height = pip_camera_preview->get_size().y;
+
+		info_label->set_anchor_and_offset(SIDE_BOTTOM, ANCHOR_END, -preview_height - (info_label_margin * 2));
+	} else {
+		info_label->set_anchor_and_offset(SIDE_BOTTOM, ANCHOR_END, -info_label_margin);
+	}
 }
 
 float Node3DEditorViewport::get_znear() const {
@@ -2864,6 +2884,7 @@ void Node3DEditorViewport::_notification(int p_what) {
 			bool show_info = view_menu->get_popup()->is_item_checked(view_menu->get_popup()->get_item_index(VIEW_INFORMATION));
 			if (show_info != info_label->is_visible()) {
 				info_label->set_visible(show_info);
+				_update_info_label();
 			}
 
 			Camera3D *current_camera;
@@ -5254,6 +5275,7 @@ Node3DEditorViewport::Node3DEditorViewport(Node3DEditor *p_spatial_editor, int p
 	message_label->set_h_grow_direction(GROW_DIRECTION_BEGIN);
 	message_label->set_v_grow_direction(GROW_DIRECTION_BEGIN);
 	message_label->set_mouse_filter(MOUSE_FILTER_IGNORE);
+	message_label->set_z_index(PIP_CAMERA_PREVIEW_Z_INDEX + 1);
 	surface->add_child(message_label);
 
 	info_label = memnew(Label);
@@ -5374,6 +5396,13 @@ Node3DEditorViewport::Node3DEditorViewport(Node3DEditor *p_spatial_editor, int p
 	selection_menu->set_min_size(Size2(100, 0) * EDSCALE);
 	selection_menu->connect("id_pressed", callable_mp(this, &Node3DEditorViewport::_selection_result_pressed));
 	selection_menu->connect("popup_hide", callable_mp(this, &Node3DEditorViewport::_selection_menu_hide));
+
+	// Picture-in-picture camera preview.
+	pip_camera_preview = memnew(PIPCameraPreview(this));
+	pip_camera_preview->set_z_index(PIP_CAMERA_PREVIEW_Z_INDEX);
+	pip_camera_preview->connect("resized", callable_mp(this, &Node3DEditorViewport::_update_info_label));
+	pip_camera_preview->connect("pinned_position_changed", callable_mp(this, &Node3DEditorViewport::_update_info_label));
+	surface->add_child(pip_camera_preview);
 
 	if (p_index == 0) {
 		view_menu->get_popup()->set_item_checked(view_menu->get_popup()->get_item_index(VIEW_AUDIO_LISTENER), true);
@@ -7768,6 +7797,10 @@ void Node3DEditor::_notification(int p_what) {
 				tool_option_button[TOOL_OPT_OVERRIDE_CAMERA]->set_pressed(false);
 			}
 		} break;
+
+		// case NOTIFICATION_PROCESS: {
+		// 	printf("Node3DEditor->process\n");
+		// } break;
 
 		case NOTIFICATION_PHYSICS_PROCESS: {
 			if (do_snap_selected_nodes_to_floor) {

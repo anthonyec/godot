@@ -33,6 +33,7 @@
 
 #include "editor/plugins/editor_plugin.h"
 #include "editor/plugins/node_3d_editor_gizmos.h"
+#include "editor/plugins/pip_camera_preview_plugin.h"
 #include "editor/themes/editor_scale.h"
 #include "scene/gui/box_container.h"
 #include "scene/gui/button.h"
@@ -260,6 +261,8 @@ private:
 	Label *gpu_time_label = nullptr;
 	Label *fps_label = nullptr;
 
+	PIPCameraPreview *pip_camera_preview = nullptr;
+
 	struct _RayResult {
 		Node3D *item = nullptr;
 		real_t depth = 0;
@@ -277,6 +280,7 @@ private:
 	int get_selected_count() const;
 	void cancel_transform();
 	void _update_shrink();
+	void _update_info_label();
 
 	Vector3 _get_camera_position() const;
 	Vector3 _get_camera_normal() const;

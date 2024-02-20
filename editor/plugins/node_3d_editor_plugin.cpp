@@ -2851,16 +2851,14 @@ void Node3DEditorViewport::_notification(int p_what) {
 				spatial_editor->update_transform_gizmo();
 			}
 
+			// TODO(anthony): Check that the timing actually works with the new label.
 			if (message_time > 0) {
 				if (message != last_message) {
-					surface->queue_redraw();
 					last_message = message;
 				}
 
 				message_time -= get_process_delta_time();
-				if (message_time < 0) {
-					surface->queue_redraw();
-				}
+				message_label->set_text(message);
 			}
 
 			bool show_info = view_menu->get_popup()->is_item_checked(view_menu->get_popup()->get_item_index(VIEW_INFORMATION));
@@ -3105,15 +3103,6 @@ void Node3DEditorViewport::_draw() {
 	}
 
 	RID ci = surface->get_canvas_item();
-
-	if (message_time > 0) {
-		Ref<Font> font = get_theme_font(SNAME("font"), SNAME("Label"));
-		int font_size = get_theme_font_size(SNAME("font_size"), SNAME("Label"));
-		Point2 msgpos = Point2(5, get_size().y - 20);
-		font->draw_string(ci, msgpos + Point2(1, 1), message, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color(0, 0, 0, 0.8));
-		font->draw_string(ci, msgpos + Point2(-1, -1), message, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color(0, 0, 0, 0.8));
-		font->draw_string(ci, msgpos, message, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color(1, 1, 1, 1));
-	}
 
 	if (_edit.mode == TRANSFORM_ROTATE && _edit.show_rotation_line) {
 		Point2 center = point_to_screen(_edit.center);
@@ -5253,6 +5242,19 @@ Node3DEditorViewport::Node3DEditorViewport(Node3DEditor *p_spatial_editor, int p
 	bottom_center_vbox->set_h_grow_direction(GROW_DIRECTION_BOTH);
 	bottom_center_vbox->set_v_grow_direction(GROW_DIRECTION_BEGIN);
 	surface->add_child(bottom_center_vbox);
+
+	message_label = memnew(Label);
+	message_label->add_theme_color_override(SNAME("font_color"), Color(1, 1, 1, 1));
+	message_label->add_theme_constant_override(SNAME("outline_size"), Math::ceil(2 * EDSCALE));
+	message_label->add_theme_color_override(SNAME("font_outline_color"), Color(0, 0, 0, 1));
+	message_label->set_anchor_and_offset(SIDE_LEFT, ANCHOR_BEGIN, 10 * EDSCALE);
+	message_label->set_anchor_and_offset(SIDE_TOP, ANCHOR_END, -10 * EDSCALE);
+	message_label->set_anchor_and_offset(SIDE_RIGHT, ANCHOR_END, -10 * EDSCALE);
+	message_label->set_anchor_and_offset(SIDE_BOTTOM, ANCHOR_END, -10 * EDSCALE);
+	message_label->set_h_grow_direction(GROW_DIRECTION_BEGIN);
+	message_label->set_v_grow_direction(GROW_DIRECTION_BEGIN);
+	message_label->set_mouse_filter(MOUSE_FILTER_IGNORE);
+	surface->add_child(message_label);
 
 	info_label = memnew(Label);
 	info_label->set_anchor_and_offset(SIDE_LEFT, ANCHOR_END, -90 * EDSCALE);

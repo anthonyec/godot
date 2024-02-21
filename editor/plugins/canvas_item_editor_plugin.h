@@ -32,6 +32,7 @@
 #define CANVAS_ITEM_EDITOR_PLUGIN_H
 
 #include "editor/plugins/editor_plugin.h"
+#include "editor/plugins/pip_camera_preview_plugin.h"
 #include "scene/gui/base_button.h"
 #include "scene/gui/box_container.h"
 
@@ -192,6 +193,7 @@ private:
 	Tool tool = TOOL_SELECT;
 	Control *viewport = nullptr;
 	Control *viewport_scrollable = nullptr;
+	PIPCameraPreview *pip_camera_preview = nullptr;
 	Label *transform_message_label = nullptr;
 
 	HScrollBar *h_scroll = nullptr;

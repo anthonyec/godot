@@ -32,6 +32,11 @@ class PIPCameraPreview : public Panel {
 			INTERACTION_STATE_ANIMATE_INTO_PLACE
 		};
 
+		struct Inset {
+			real_t left = 0;
+			real_t bottom = 0;
+		};
+
 		Control *container = nullptr;
 
 		Panel *placeholder = nullptr;
@@ -47,6 +52,7 @@ class PIPCameraPreview : public Panel {
 
 		InteractionState state;
 		PinnedEdge pinned_edge;
+		Inset inset;
 		bool show_controls;
 		Vector2 initial_mouse_position;
 		Vector2 initial_panel_position;
@@ -70,6 +76,7 @@ class PIPCameraPreview : public Panel {
 		PIPCameraPreview(Control *container);
 		~PIPCameraPreview();
 		PinnedEdge get_pinned_edge() const { return pinned_edge; };
+		void set_inset(float right, float bottom);
 };
 
 #endif // PIP_CAMERA_PREVIEW_PLUGIN_H

@@ -101,6 +101,11 @@ PIPCameraPreview::PIPCameraPreview(Control *container) {
 
 PIPCameraPreview::~PIPCameraPreview() {};
 
+void PIPCameraPreview::set_inset(real_t left, real_t bottom) {
+	inset.left = left;
+	inset.bottom = bottom;
+}
+
 void PIPCameraPreview::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("pinned_position_changed"));
 }
@@ -208,11 +213,11 @@ Vector2 PIPCameraPreview::_get_pinned_position(PinnedEdge pinned_position) {
 
 	switch (pinned_position) {
 		case PINNED_EDGE_LEFT: {
-			return Vector2(0, container_size.y) - Vector2(0, panel_size.y) - Vector2(-margin.x, margin.y);
+			return Vector2(0, container_size.y) - Vector2(0, panel_size.y) - Vector2(-margin.x, margin.y) - Vector2(-inset.left, inset.bottom);
 		} break;
 
 		case PINNED_EDGE_RIGHT: {
-			return container_size - panel_size - margin;
+			return container_size - panel_size - margin - Vector2(0, inset.bottom);
 		} break;
 	}
 }

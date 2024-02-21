@@ -64,6 +64,7 @@
 #define RULER_WIDTH (15 * EDSCALE)
 constexpr real_t SCALE_HANDLE_DISTANCE = 25;
 constexpr real_t MOVE_HANDLE_DISTANCE = 25;
+constexpr int PIP_CAMERA_PREVIEW_Z_INDEX = 1;
 
 class SnapDialog : public ConfirmationDialog {
 	GDCLASS(SnapDialog, ConfirmationDialog);
@@ -4038,6 +4039,9 @@ void CanvasItemEditor::_notification(int p_what) {
 					viewport->queue_redraw();
 				}
 			}
+
+			// Update picture-in-picture camera inset if ruler visiblity changes.
+			pip_camera_preview->set_inset(show_rulers ? RULER_WIDTH : 0, 0);
 		} break;
 
 		case NOTIFICATION_ENTER_TREE: {
@@ -5274,6 +5278,11 @@ CanvasItemEditor::CanvasItemEditor() {
 
 	viewport->add_child(controls_vb);
 
+	// Picture-in-picture camera preview.
+	pip_camera_preview = memnew(PIPCameraPreview(viewport));
+	pip_camera_preview->set_z_index(PIP_CAMERA_PREVIEW_Z_INDEX);
+	viewport->add_child(pip_camera_preview);
+
 	transform_message_label = memnew(Label);
 	transform_message_label->add_theme_color_override(SNAME("font_color"), Color(1, 1, 1, 1));
 	transform_message_label->add_theme_constant_override(SNAME("outline_size"), Math::ceil(2 * EDSCALE));
@@ -5285,6 +5294,7 @@ CanvasItemEditor::CanvasItemEditor() {
 	transform_message_label->set_h_grow_direction(GROW_DIRECTION_BEGIN);
 	transform_message_label->set_v_grow_direction(GROW_DIRECTION_BEGIN);
 	transform_message_label->set_mouse_filter(MOUSE_FILTER_IGNORE);
+	transform_message_label->set_z_index(PIP_CAMERA_PREVIEW_Z_INDEX + 1);
 	viewport->add_child(transform_message_label);
 
 	select_button = memnew(Button);

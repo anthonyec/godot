@@ -3763,7 +3763,7 @@ void CanvasItemEditor::_draw_hover() {
 	}
 }
 
-void CanvasItemEditor::_draw_message() {
+void CanvasItemEditor::_update_transform_message() {
 	if (drag_type != DRAG_NONE && !drag_selection.is_empty() && drag_selection.front()->get()) {
 		Transform2D current_transform = drag_selection.front()->get()->get_global_transform();
 
@@ -3811,15 +3811,12 @@ void CanvasItemEditor::_draw_message() {
 	}
 
 	if (message.is_empty()) {
-		return;
+		transform_message_label->set_text("");
 	}
 
-	Ref<Font> font = get_theme_font(SNAME("font"), SNAME("Label"));
-	int font_size = get_theme_font_size(SNAME("font_size"), SNAME("Label"));
-	Point2 msgpos = Point2(RULER_WIDTH + 5 * EDSCALE, viewport->get_size().y - 20 * EDSCALE);
-	viewport->draw_string(font, msgpos + Point2(1, 1), message, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color(0, 0, 0, 0.8));
-	viewport->draw_string(font, msgpos + Point2(-1, -1), message, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color(0, 0, 0, 0.8));
-	viewport->draw_string(font, msgpos, message, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color(1, 1, 1, 1));
+	real_t ruler_width = show_rulers ? RULER_WIDTH : 0;
+	transform_message_label->set_anchor_and_offset(SIDE_LEFT, ANCHOR_BEGIN, ruler_width + (10 * EDSCALE));
+	transform_message_label->set_text(message);
 }
 
 void CanvasItemEditor::_draw_locks_and_groups(Node *p_node, const Transform2D &p_parent_xform, const Transform2D &p_canvas_xform) {
@@ -3904,7 +3901,7 @@ void CanvasItemEditor::_draw_viewport() {
 	_draw_smart_snapping();
 	_draw_focus();
 	_draw_hover();
-	_draw_message();
+	_update_transform_message();
 }
 
 void CanvasItemEditor::update_viewport() {
@@ -5276,6 +5273,19 @@ CanvasItemEditor::CanvasItemEditor() {
 	v_scroll->hide();
 
 	viewport->add_child(controls_vb);
+
+	transform_message_label = memnew(Label);
+	transform_message_label->add_theme_color_override(SNAME("font_color"), Color(1, 1, 1, 1));
+	transform_message_label->add_theme_constant_override(SNAME("outline_size"), Math::ceil(2 * EDSCALE));
+	transform_message_label->add_theme_color_override(SNAME("font_outline_color"), Color(0, 0, 0, 1));
+	transform_message_label->set_anchor_and_offset(SIDE_LEFT, ANCHOR_BEGIN, RULER_WIDTH + (10 * EDSCALE));
+	transform_message_label->set_anchor_and_offset(SIDE_TOP, ANCHOR_END, -10 * EDSCALE);
+	transform_message_label->set_anchor_and_offset(SIDE_RIGHT, ANCHOR_END, -10 * EDSCALE);
+	transform_message_label->set_anchor_and_offset(SIDE_BOTTOM, ANCHOR_END, -10 * EDSCALE);
+	transform_message_label->set_h_grow_direction(GROW_DIRECTION_BEGIN);
+	transform_message_label->set_v_grow_direction(GROW_DIRECTION_BEGIN);
+	transform_message_label->set_mouse_filter(MOUSE_FILTER_IGNORE);
+	viewport->add_child(transform_message_label);
 
 	select_button = memnew(Button);
 	select_button->set_theme_type_variation("FlatButton");

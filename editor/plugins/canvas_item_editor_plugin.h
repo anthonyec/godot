@@ -192,6 +192,7 @@ private:
 	Tool tool = TOOL_SELECT;
 	Control *viewport = nullptr;
 	Control *viewport_scrollable = nullptr;
+	Label *transform_message_label = nullptr;
 
 	HScrollBar *h_scroll = nullptr;
 	VScrollBar *v_scroll = nullptr;
@@ -460,7 +461,7 @@ private:
 	void _draw_invisible_nodes_positions(Node *p_node, const Transform2D &p_parent_xform = Transform2D(), const Transform2D &p_canvas_xform = Transform2D());
 	void _draw_locks_and_groups(Node *p_node, const Transform2D &p_parent_xform = Transform2D(), const Transform2D &p_canvas_xform = Transform2D());
 	void _draw_hover();
-	void _draw_message();
+	void _update_transform_message();
 
 	void _draw_viewport();
 

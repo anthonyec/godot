@@ -42,7 +42,7 @@ private:
 	Panel *placeholder = nullptr;
 	SubViewport *sub_viewport = nullptr;
 	MarginContainer *viewport_texture_container = nullptr;
-	TextureRect *viewport_texture = nullptr;
+	TextureRect *viewport_texture_rect = nullptr;
 	Button *drag_handle = nullptr;
 	MarginContainer *overlay_margin_container = nullptr;
 	Control *overlay_container = nullptr;
@@ -53,7 +53,8 @@ private:
 	InteractionState state;
 	PinnedEdge pinned_edge;
 	Inset inset;
-	Camera3D *camera_3d;
+	Camera3D *selected_camera_3d = nullptr;
+	Camera3D *preview_camera_3d = nullptr;
 	bool show_controls;
 	Vector2 initial_mouse_position;
 	Vector2 initial_panel_position;
@@ -77,8 +78,9 @@ public:
 	PIPCameraPreview(Control *container);
 	~PIPCameraPreview();
 	PinnedEdge get_pinned_edge() const { return pinned_edge; };
-	void set_inset(float right, float bottom);
-	void set_camera_3d(Camera3D *camera);
+	void set_inset(real_t right, real_t bottom);
+	void set_selected_camera_3d(Camera3D *camera);
+	void request_hide();
 };
 
 #endif // PIP_CAMERA_PREVIEW_PLUGIN_H

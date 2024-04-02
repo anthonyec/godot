@@ -7397,8 +7397,12 @@ void Node3DEditor::_selection_changed() {
 			for (uint32_t i = 0; i < VIEWPORTS_COUNT; i++) {
 				// TODO(anthony): Is it correct to static cast? Is there a type safe way
 				// to check for node being a `Camera3D`?
-				viewports[i]->pip_camera_preview->set_camera_3d(static_cast<Camera3D *>(node));
+				viewports[i]->pip_camera_preview->set_selected_camera_3d(static_cast<Camera3D *>(node));
 			}
+		}
+	} else {
+		for (uint32_t i = 0; i < VIEWPORTS_COUNT; i++) {
+			viewports[i]->pip_camera_preview->request_hide();
 		}
 	}
 

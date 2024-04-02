@@ -18,6 +18,8 @@ PIPCameraPreview::PIPCameraPreview(Control *container) {
 	this->container = container;
 	set_z_index(1);
 
+	float margin_size = 2 * EDSCALE;
+
 	// Placeholder that is shown when dragging the panel around.
 	placeholder = memnew(Panel);
 	placeholder->set_visible(false);
@@ -25,19 +27,24 @@ PIPCameraPreview::PIPCameraPreview(Control *container) {
 	placeholder->set_z_index(0);
 	container->add_child(placeholder);
 
+	// Setup viewport and preview cameras.
 	sub_viewport = memnew(SubViewport);
+	sub_viewport->set_size_2d_override_stretch(true);
 	add_child(sub_viewport);
 
 	// Viewport texture that renders the preview.
 	viewport_texture_container = memnew(MarginContainer);
+	viewport_texture_container->set_anchors_preset(PRESET_FULL_RECT);
+	viewport_texture_container->add_theme_constant_override("margin_left", margin_size);
+	viewport_texture_container->add_theme_constant_override("margin_right", margin_size);
+	viewport_texture_container->add_theme_constant_override("margin_top", margin_size);
+	viewport_texture_container->add_theme_constant_override("margin_bottom", margin_size);
 	add_child(viewport_texture_container);
 
-	viewport_texture = memnew(TextureRect);
-	viewport_texture_container->add_child(viewport_texture);
+	viewport_texture_rect = memnew(TextureRect);
+	viewport_texture_container->add_child(viewport_texture_rect);
 
 	// Overlay which contains all the button controls.
-	float margin_size = 2 * EDSCALE;
-
 	overlay_margin_container = memnew(MarginContainer);
 	overlay_margin_container->set_anchors_preset(PRESET_FULL_RECT);
 	overlay_margin_container->add_theme_constant_override("margin_left", margin_size);
@@ -92,6 +99,8 @@ PIPCameraPreview::PIPCameraPreview(Control *container) {
 	pin_button->set_anchors_preset(PRESET_BOTTOM_LEFT);
 	overlay_container->add_child(pin_button);
 
+	hide();
+
 	// TODO(anthony): I think an ancestor node below `Node3DEditor` is setting
 	// process to false (with `set_process`) since this preview does not update.
 	// Remove this when I find out which node is causing this.
@@ -106,8 +115,20 @@ void PIPCameraPreview::set_inset(real_t left, real_t bottom) {
 	inset.bottom = bottom;
 }
 
-void PIPCameraPreview::set_camera_3d(Camera3D *camera) {
-	camera_3d = camera;
+void PIPCameraPreview::set_selected_camera_3d(Camera3D *camera) {
+	selected_camera_3d = camera;
+
+	// TODO(anthony): Set up signals for when camera exists scene.
+
+	sub_viewport->set_disable_3d(false);
+	sub_viewport->set_world_3d(selected_camera_3d->get_world_3d());
+
+	show();
+}
+
+void PIPCameraPreview::request_hide() {
+	selected_camera_3d = nullptr;
+	hide();
 }
 
 void PIPCameraPreview::_bind_methods() {
@@ -118,6 +139,12 @@ void PIPCameraPreview::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_READY: {
 			container = get_parent_control();
+
+			viewport_texture_rect->set_texture(sub_viewport->get_texture());
+			viewport_texture_rect->set_expand_mode(TextureRect::EXPAND_IGNORE_SIZE);
+
+			preview_camera_3d = memnew(Camera3D);
+			sub_viewport->add_child(preview_camera_3d);
 		} break;
 
 		case NOTIFICATION_PROCESS: {
@@ -207,8 +234,23 @@ void PIPCameraPreview::_notification(int p_what) {
 			resize_right_handle->set_visible(show_controls && pinned_edge == PINNED_EDGE_LEFT);
 			placeholder->set_visible(state == INTERACTION_STATE_DRAG || state == INTERACTION_STATE_ANIMATE_INTO_PLACE);
 
-			if (camera_3d) {
-				//...
+			// Sync camera settings.
+			if (selected_camera_3d != nullptr) {
+				sub_viewport->set_size(get_size());
+
+				preview_camera_3d->set_global_transform(selected_camera_3d->get_global_transform());
+				preview_camera_3d->set_fov(selected_camera_3d->get_fov());
+				preview_camera_3d->set_fov(selected_camera_3d->get_fov());
+				preview_camera_3d->set_projection(selected_camera_3d->get_projection());
+				preview_camera_3d->set_size(selected_camera_3d->get_size());
+				preview_camera_3d->set_cull_mask(selected_camera_3d->get_cull_mask());
+				preview_camera_3d->set_keep_aspect_mode(selected_camera_3d->get_keep_aspect_mode());
+				preview_camera_3d->set_near(selected_camera_3d->get_near());
+				preview_camera_3d->set_far(selected_camera_3d->get_far());
+				preview_camera_3d->set_h_offset(selected_camera_3d->get_h_offset());
+				preview_camera_3d->set_v_offset(selected_camera_3d->get_v_offset());
+				preview_camera_3d->set_attributes(selected_camera_3d->get_attributes());
+				preview_camera_3d->set_environment(selected_camera_3d->get_environment());
 			}
 		} break;
 	}

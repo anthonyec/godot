@@ -5,12 +5,12 @@
 #include "editor/editor_node.h"
 #include "editor/editor_string_names.h"
 #include "editor/themes/editor_scale.h"
-#include "scene/main/viewport.h"
-#include "scene/gui/panel.h"
-#include "scene/gui/margin_container.h"
-#include "scene/gui/button.h"
-#include "scene/gui/texture_rect.h"
 #include "scene/animation/tween.h"
+#include "scene/gui/button.h"
+#include "scene/gui/margin_container.h"
+#include "scene/gui/panel.h"
+#include "scene/gui/texture_rect.h"
+#include "scene/main/viewport.h"
 
 constexpr float MIN_PANEL_SIZE = 250;
 
@@ -99,11 +99,15 @@ PIPCameraPreview::PIPCameraPreview(Control *container) {
 	set_process(true);
 };
 
-PIPCameraPreview::~PIPCameraPreview() {};
+PIPCameraPreview::~PIPCameraPreview(){};
 
 void PIPCameraPreview::set_inset(real_t left, real_t bottom) {
 	inset.left = left;
 	inset.bottom = bottom;
+}
+
+void PIPCameraPreview::set_camera_3d(Camera3D *camera) {
+	camera_3d = camera;
 }
 
 void PIPCameraPreview::_bind_methods() {
@@ -113,7 +117,7 @@ void PIPCameraPreview::_bind_methods() {
 void PIPCameraPreview::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_READY: {
-				container = get_parent_control();
+			container = get_parent_control();
 		} break;
 
 		case NOTIFICATION_PROCESS: {
@@ -202,6 +206,10 @@ void PIPCameraPreview::_notification(int p_what) {
 			resize_left_handle->set_visible(show_controls && pinned_edge == PINNED_EDGE_RIGHT);
 			resize_right_handle->set_visible(show_controls && pinned_edge == PINNED_EDGE_LEFT);
 			placeholder->set_visible(state == INTERACTION_STATE_DRAG || state == INTERACTION_STATE_ANIMATE_INTO_PLACE);
+
+			if (camera_3d) {
+				//...
+			}
 		} break;
 	}
 }
@@ -254,9 +262,8 @@ Vector2 PIPCameraPreview::_get_clamped_size(Vector2 desired_size) {
 	Vector2 container_size = container->get_size();
 
 	Vector2 max_bounds = Vector2(
-		container_size.x * 0.6,
-		container_size.y * 0.8
-	);
+			container_size.x * 0.6,
+			container_size.y * 0.8);
 
 	Vector2 clamped_size = desired_size;
 
@@ -331,6 +338,3 @@ void PIPCameraPreview::_on_drag_handle_button_up() {
 
 	state = INTERACTION_STATE_START_ANIMATE_INTO_PLACE;
 }
-
-
-

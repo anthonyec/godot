@@ -7388,8 +7388,22 @@ void Node3DEditor::update_grid() {
 }
 
 void Node3DEditor::_selection_changed() {
+	List<Node *> selection = editor_selection->get_selected_node_list();
+
+	if (selection.size() == 1) {
+		Node *node = selection[0];
+
+		if (node->is_class("Camera3D")) {
+			for (uint32_t i = 0; i < VIEWPORTS_COUNT; i++) {
+				// TODO(anthony): Is it correct to static cast? Is there a type safe way
+				// to check for node being a `Camera3D`?
+				viewports[i]->pip_camera_preview->set_camera_3d(static_cast<Camera3D *>(node));
+			}
+		}
+	}
+
 	_refresh_menu_icons();
-	if (selected && editor_selection->get_selected_node_list().size() != 1) {
+	if (selected && selection.size() != 1) {
 		Vector<Ref<Node3DGizmo>> gizmos = selected->get_gizmos();
 		for (int i = 0; i < gizmos.size(); i++) {
 			Ref<EditorNode3DGizmo> seg = gizmos[i];
@@ -7798,9 +7812,9 @@ void Node3DEditor::_notification(int p_what) {
 			}
 		} break;
 
-		// case NOTIFICATION_PROCESS: {
-		// 	printf("Node3DEditor->process\n");
-		// } break;
+			// case NOTIFICATION_PROCESS: {
+			// 	printf("Node3DEditor->process\n");
+			// } break;
 
 		case NOTIFICATION_PHYSICS_PROCESS: {
 			if (do_snap_selected_nodes_to_floor) {

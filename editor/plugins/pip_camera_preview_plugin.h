@@ -1,13 +1,15 @@
 #ifndef PIP_CAMERA_PREVIEW_PLUGIN_H
 #define PIP_CAMERA_PREVIEW_PLUGIN_H
 
-#include "editor/editor_plugin.h"
+#include "editor/plugins/editor_plugin.h"
 
 #include "scene/gui/button.h"
 #include "scene/gui/margin_container.h"
 #include "scene/gui/panel.h"
 #include "scene/gui/texture_rect.h"
 #include "scene/main/viewport.h"
+
+class EditorSelection;
 
 class PIPCameraPreview : public Panel {
 	GDCLASS(PIPCameraPreview, Panel);
@@ -81,6 +83,29 @@ public:
 	void set_inset(real_t right, real_t bottom);
 	void set_selected_camera_3d(Camera3D *camera);
 	void request_hide();
+};
+
+class PIPCameraPreviewPlugin : public EditorPlugin {
+	GDCLASS(PIPCameraPreviewPlugin, EditorPlugin);
+
+protected:
+	static PIPCameraPreviewPlugin *singleton;
+
+	void _notification(int p_what);
+	void _on_main_screen_changed(const String &screen_name);
+	void _on_editor_selection_changed();
+
+	Vector<PIPCameraPreview *> previews;
+	EditorSelection *editor_selection = nullptr;
+	String current_main_screen_name;
+
+public:
+	static PIPCameraPreviewPlugin *get_singleton();
+
+	void add_preview(PIPCameraPreview *preview);
+
+	PIPCameraPreviewPlugin();
+	~PIPCameraPreviewPlugin();
 };
 
 #endif // PIP_CAMERA_PREVIEW_PLUGIN_H

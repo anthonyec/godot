@@ -138,6 +138,9 @@ void PIPCameraPreview::_bind_methods() {
 void PIPCameraPreview::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_READY: {
+			PIPCameraPreviewPlugin *plugin = PIPCameraPreviewPlugin::get_singleton();
+			plugin->add_preview(this);
+
 			container = get_parent_control();
 
 			viewport_texture_rect->set_texture(sub_viewport->get_texture());
@@ -379,4 +382,69 @@ void PIPCameraPreview::_on_drag_handle_button_up() {
 	}
 
 	state = INTERACTION_STATE_START_ANIMATE_INTO_PLACE;
+}
+
+PIPCameraPreviewPlugin *PIPCameraPreviewPlugin::singleton = nullptr;
+
+PIPCameraPreviewPlugin::PIPCameraPreviewPlugin() {
+	singleton = this;
+	editor_selection = EditorNode::get_singleton()->get_editor_selection();
+}
+
+PIPCameraPreviewPlugin::~PIPCameraPreviewPlugin() {}
+
+PIPCameraPreviewPlugin *PIPCameraPreviewPlugin::get_singleton() {
+	return singleton;
+}
+
+void PIPCameraPreviewPlugin::_notification(int p_what) {
+	switch (p_what) {
+		case NOTIFICATION_ENTER_TREE: {
+			connect("main_screen_changed", callable_mp(this, &PIPCameraPreviewPlugin::_on_main_screen_changed));
+			editor_selection->connect("selection_changed", callable_mp(this, &PIPCameraPreviewPlugin::_on_editor_selection_changed));
+		} break;
+		case NOTIFICATION_EXIT_TREE: {
+			disconnect("main_screen_changed", callable_mp(this, &PIPCameraPreviewPlugin::_on_main_screen_changed));
+			editor_selection->disconnect("selection_changed", callable_mp(this, &PIPCameraPreviewPlugin::_on_editor_selection_changed));
+		} break;
+	}
+}
+
+void PIPCameraPreviewPlugin::_on_main_screen_changed(const String &screen_name) {
+	current_main_screen_name = screen_name;
+}
+
+void PIPCameraPreviewPlugin::_on_editor_selection_changed() {
+	List<Node *> selection = editor_selection->get_selected_node_list();
+
+	if (selection.is_empty()) {
+		for (PIPCameraPreview *preview : previews) {
+			preview->request_hide();
+		}
+
+		return;
+	}
+
+	Node *node = selection.get(0);
+
+	// TODO(anthony): Is there a more type safe way to do this? I have to use
+	// static cast hmm.
+	if (node->is_class("Camera3D") && current_main_screen_name == "3D") {
+		for (PIPCameraPreview *preview : previews) {
+			preview->set_selected_camera_3d(static_cast<Camera3D *>(node));
+		}
+	} else if (node->is_class("Camera2D") && current_main_screen_name == "2D") {
+		// TODO(anthony): Show 2D camera previews.
+		// for (PIPCameraPreview *preview : previews) {
+		// preview->set_selected_camera_2d(static_cast<Camera2D *>(node));
+		// }
+	} else {
+		for (PIPCameraPreview *preview : previews) {
+			preview->request_hide();
+		}
+	}
+}
+
+void PIPCameraPreviewPlugin::add_preview(PIPCameraPreview *preview) {
+	previews.push_back(preview);
 }

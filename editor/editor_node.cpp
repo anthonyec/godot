@@ -147,6 +147,7 @@
 #include "editor/plugins/node_3d_editor_plugin.h"
 #include "editor/plugins/packed_scene_translation_parser_plugin.h"
 #include "editor/plugins/particle_process_material_editor_plugin.h"
+#include "editor/plugins/pip_camera_preview_plugin.h"
 #include "editor/plugins/plugin_config_dialog.h"
 #include "editor/plugins/root_motion_editor_plugin.h"
 #include "editor/plugins/script_text_editor.h"
@@ -7251,6 +7252,7 @@ EditorNode::EditorNode() {
 	add_editor_plugin(memnew(CanvasItemEditorPlugin));
 	add_editor_plugin(memnew(Node3DEditorPlugin));
 	add_editor_plugin(memnew(ScriptEditorPlugin));
+	add_editor_plugin(memnew(PIPCameraPreviewPlugin));
 
 	EditorAudioBuses *audio_bus_editor = EditorAudioBuses::register_editor();
 

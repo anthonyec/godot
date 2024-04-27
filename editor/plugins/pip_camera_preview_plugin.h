@@ -3,6 +3,8 @@
 
 #include "editor/plugins/editor_plugin.h"
 
+#include "scene/2d/camera_2d.h"
+#include "scene/3d/camera_3d.h"
 #include "scene/gui/button.h"
 #include "scene/gui/margin_container.h"
 #include "scene/gui/panel.h"
@@ -56,7 +58,9 @@ private:
 	PinnedEdge pinned_edge;
 	Inset inset;
 	Camera3D *selected_camera_3d = nullptr;
+	Camera2D *selected_camera_2d = nullptr;
 	Camera3D *preview_camera_3d = nullptr;
+	Camera2D *preview_camera_2d = nullptr;
 	bool show_controls;
 	Vector2 initial_mouse_position;
 	Vector2 initial_panel_position;
@@ -82,6 +86,7 @@ public:
 	PinnedEdge get_pinned_edge() const { return pinned_edge; };
 	void set_inset(real_t right, real_t bottom);
 	void set_selected_camera_3d(Camera3D *camera);
+	void set_selected_camera_2d(Camera2D *camera);
 	void request_hide();
 };
 

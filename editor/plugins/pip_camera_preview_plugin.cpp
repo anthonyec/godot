@@ -11,6 +11,7 @@
 #include "scene/gui/panel.h"
 #include "scene/gui/texture_rect.h"
 #include "scene/main/viewport.h"
+#include "scene/resources/world_2d.h"
 
 constexpr float MIN_PANEL_SIZE = 250;
 
@@ -126,8 +127,20 @@ void PIPCameraPreview::set_selected_camera_3d(Camera3D *camera) {
 	show();
 }
 
+void PIPCameraPreview::set_selected_camera_2d(Camera2D *camera) {
+	selected_camera_2d = camera;
+
+	// TODO(anthony): Set up signals for when camera exists scene.
+
+	sub_viewport->set_disable_3d(true);
+	sub_viewport->set_world_2d(selected_camera_2d->get_world_2d());
+
+	show();
+}
+
 void PIPCameraPreview::request_hide() {
 	selected_camera_3d = nullptr;
+	selected_camera_2d = nullptr;
 	hide();
 }
 
@@ -148,6 +161,9 @@ void PIPCameraPreview::_notification(int p_what) {
 
 			preview_camera_3d = memnew(Camera3D);
 			sub_viewport->add_child(preview_camera_3d);
+
+			preview_camera_2d = memnew(Camera2D);
+			sub_viewport->add_child(preview_camera_2d);
 		} break;
 
 		case NOTIFICATION_PROCESS: {
@@ -254,6 +270,32 @@ void PIPCameraPreview::_notification(int p_what) {
 				preview_camera_3d->set_v_offset(selected_camera_3d->get_v_offset());
 				preview_camera_3d->set_attributes(selected_camera_3d->get_attributes());
 				preview_camera_3d->set_environment(selected_camera_3d->get_environment());
+			}
+
+			if (selected_camera_2d != nullptr) {
+				// TODO(anthony): Explain why the ratio is calculated like this and not
+				// using the project ratio. I forgot why.
+				Vector2 project_window_size = _get_project_window_size();
+				float ratio = project_window_size.x / get_size().x;
+
+				// The camera border is visible in the preview, subtract 1px from right
+				// and bottom to hide this.
+				Vector2 hide_camera_border_fix = Vector2(1, 1);
+
+				sub_viewport->set_size(get_size());
+				sub_viewport->set_size_2d_override((get_size() - hide_camera_border_fix) * ratio);
+				sub_viewport->set_size_2d_override_stretch(true);
+
+				preview_camera_2d->set_global_position(selected_camera_2d->get_global_position());
+				preview_camera_2d->set_global_rotation(selected_camera_2d->get_global_rotation());
+				preview_camera_2d->set_offset(selected_camera_2d->get_offset());
+				preview_camera_2d->set_zoom(selected_camera_2d->get_zoom());
+				preview_camera_2d->set_ignore_rotation(selected_camera_2d->is_ignoring_rotation());
+				preview_camera_2d->set_anchor_mode(selected_camera_2d->get_anchor_mode());
+				preview_camera_2d->set_limit(SIDE_LEFT, selected_camera_2d->get_limit(SIDE_LEFT));
+				preview_camera_2d->set_limit(SIDE_RIGHT, selected_camera_2d->get_limit(SIDE_RIGHT));
+				preview_camera_2d->set_limit(SIDE_TOP, selected_camera_2d->get_limit(SIDE_TOP));
+				preview_camera_2d->set_limit(SIDE_BOTTOM, selected_camera_2d->get_limit(SIDE_BOTTOM));
 			}
 		} break;
 	}
@@ -434,10 +476,9 @@ void PIPCameraPreviewPlugin::_on_editor_selection_changed() {
 			preview->set_selected_camera_3d(static_cast<Camera3D *>(node));
 		}
 	} else if (node->is_class("Camera2D") && current_main_screen_name == "2D") {
-		// TODO(anthony): Show 2D camera previews.
-		// for (PIPCameraPreview *preview : previews) {
-		// preview->set_selected_camera_2d(static_cast<Camera2D *>(node));
-		// }
+		for (PIPCameraPreview *preview : previews) {
+			preview->set_selected_camera_2d(static_cast<Camera2D *>(node));
+		}
 	} else {
 		for (PIPCameraPreview *preview : previews) {
 			preview->request_hide();
